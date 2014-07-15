@@ -10,7 +10,7 @@ import time
 import urllib
 import urllib2
 
-API_TOKEN = 'YOUR_API_TOKEN_HERE'
+API_TOKEN = 'API TOKEN HERE'
 NEXT_ACTION_LABEL = u'next_action'
 
 class TraversalState(object):
@@ -119,8 +119,12 @@ class Item(object):
 
 class Project(object):
   def __init__(self, initial_data):
+    self._todoist = None
+    self.parent = None
     self.children = []
-    self.indent = 0
+    self._subProjects = None
+    self.itemOrder = initial_data['item_order']
+    self.indent = initial_data['indent'] - 1
     self.is_archived = initial_data['is_archived'] == 1
     self.is_deleted = initial_data['is_deleted'] == 1
     self.last_updated = initial_data['last_updated']
@@ -131,8 +135,32 @@ class Project(object):
     self._CreateItemTree(initial_data['items'])
     self.SortChildren()
 
+  def setTodoist(self, todoist):
+    self._todoist = todoist
+
+  def subProjects(self):
+    if self._subProjects == None:
+      self._subProjects = []
+      initialIndent = self.indent
+      initialOrder = self.itemOrder
+      order = initialOrder + 1
+      maxSize = len(self._todoist._orderedProjects)
+      if order < maxSize:
+        current = self._todoist._orderedProjects[order]
+        while ((current.indent > initialIndent) and (order < maxSize)):
+          current = self._todoist._orderedProjects[order]
+          self._subProjects.append(current)
+          current.parent = self
+          order = order + 1
+      
+    return self._subProjects
+
   def IsSequential(self):
-    return self.name.endswith('--')
+    startWithSomeday = self.name.startswith('Someday')
+    endsWithEqual = self.name.endswith('=')
+    parentSequential = self.parent == None or self.parent.IsSequential()
+    seq = ((not startWithSomeday) and (not endsWithEqual)) and parentSequential
+    return seq
 
   def IsParallel(self):
     return self.name.endswith('=')
@@ -164,13 +192,13 @@ class Project(object):
             previous_item.content, parent_item.content)
         parent_item = previous_item
       # walk up the tree until we reach our parent
-      while item.indent <= parent_item.indent:
+      while (parent_item.parent != None and item.indent <= parent_item.indent):
         logging.debug('walking up the tree from "%s" to "%s"',
-            parent_item.content, parent_item.parent.content)
+            parent_item.content, (parent_item.parent if (parent_item.parent != None) else 0))
         parent_item = parent_item.parent
 
       logging.debug('adding item "%s" with parent "%s"', item.content,
-          parent_item.content)
+          parent_item.content if (parent_item != None) else '')
       parent_item.children.append(item)
       item.parent = parent_item
       previous_item = item
@@ -179,12 +207,17 @@ class Project(object):
 class TodoistData(object):
   '''Construct an object based on a full Todoist /Get request's data'''
   def __init__(self, initial_data):
-
     self._SetLabelData(initial_data)
     self._projects = dict()
+    self._orderedProjects = dict()
     for project in initial_data['Projects']:
-      self._projects[project['id']] = Project(project)
-
+      p = Project(project)
+      p.setTodoist(self)
+      self._projects[project['id']] = p
+      self._orderedProjects[project['item_order']] = p
+    for project in self._projects.values():
+      project.subProjects()
+      
   def _SetLabelData(self, label_data):
     # Store label data - we need this to set the next_action label.
     self._labels_timestamp = label_data['LabelsTimestamp']
@@ -313,20 +346,22 @@ def main():
   response = GetResponse()
   json_data = json.loads(response.read())
   logging.debug("Got initial data: %s", json_data)
-  a = TodoistData(json_data)
   while True:
-    mods = a.GetProjectMods()
+    logging.info("*** Retrieving Data")
+    singleton = TodoistData(json_data)
+    logging.info("*** Data built")
+    mods = singleton.GetProjectMods()
     if len(mods) == 0:
       time.sleep(5)
     else:
       logging.info("* Modifications necessary - skipping sleep cycle.")
     logging.info("** Beginning sync")
-    sync_state = a.GetSyncState()
+    sync_state = singleton.GetSyncState()
     changed_data = DoSyncAndGetUpdated(mods, sync_state).read()
     logging.debug("Got sync data %s", changed_data)
     changed_data = json.loads(changed_data)
     logging.info("* Updating model after receiving sync data")
-    a.UpdateChangedData(changed_data)
+    singleton.UpdateChangedData(changed_data)
     logging.info("* Finished updating model")
     logging.info("** Finished sync")
 
