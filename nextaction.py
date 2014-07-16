@@ -142,16 +142,17 @@ class Project(object):
     if self._subProjects == None:
       self._subProjects = []
       initialIndent = self.indent
-      initialOrder = self.itemOrder
+      initialOrder = self._todoist._orderedProjects.index(self)
       order = initialOrder + 1
       maxSize = len(self._todoist._orderedProjects)
       if order < maxSize:
         current = self._todoist._orderedProjects[order]
         while ((current.indent > initialIndent) and (order < maxSize)):
           current = self._todoist._orderedProjects[order]
-          self._subProjects.append(current)
-          current.parent = self
-          order = order + 1
+          if current != None:
+            self._subProjects.append(current)
+            current.parent = self
+            order = order + 1
       
     return self._subProjects
 
@@ -209,12 +210,14 @@ class TodoistData(object):
   def __init__(self, initial_data):
     self._SetLabelData(initial_data)
     self._projects = dict()
-    self._orderedProjects = dict()
+
     for project in initial_data['Projects']:
       p = Project(project)
       p.setTodoist(self)
       self._projects[project['id']] = p
-      self._orderedProjects[project['item_order']] = p
+      
+    self._orderedProjects = sorted(self._projects.values(), key=lambda project: project.itemOrder)
+      
     for project in self._projects.values():
       project.subProjects()
       
