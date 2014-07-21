@@ -12,6 +12,7 @@ import urllib2
 
 API_TOKEN = 'API TOKEN HERE'
 NEXT_ACTION_LABEL = u'next_action'
+TODOIST_VERSION = '5.3'
 
 class TraversalState(object):
   """Simple class to contain the state of the item tree traversal."""
@@ -132,8 +133,14 @@ class Project(object):
     # Project should act like an item, so it should have content.
     self.content = initial_data['name']
     self.project_id = initial_data['id']
-    self._CreateItemTree(initial_data['items'])
+    self._CreateItemTree(self.getItems())
     self.SortChildren()
+
+  def getItems(self):
+    req = urllib2.Request('https://todoist.com/API/getUncompletedItems?project_id='+ str(self.project_id) +'&token=' + API_TOKEN)
+    response = urllib2.urlopen(req)
+    return json.loads(response.read())
+    
 
   def setTodoist(self, todoist):
     self._todoist = todoist
@@ -223,9 +230,9 @@ class TodoistData(object):
       
   def _SetLabelData(self, label_data):
     # Store label data - we need this to set the next_action label.
-    self._labels_timestamp = label_data['LabelsTimestamp']
+    self._labels_timestamp = label_data['DayOrdersTimestamp']
     self._next_action_id = None
-    for label in label_data['Labels']:
+    for label in label_data['Labels'].values():
       if label['name'] == NEXT_ACTION_LABEL:
         self._next_action_id = label['id']
         logging.info('Found next_action label, id: %s', label['id'])
@@ -240,8 +247,8 @@ class TodoistData(object):
             'project_timestamps': project_timestamps}
 
   def UpdateChangedData(self, changed_data):
-    if ('LabelsTimestamp' in changed_data
-        and changed_data['LabelsTimestamp'] != self._labels_timestamp):
+    if ('DayOrdersTimestamp' in changed_data
+        and changed_data['DayOrdersTimestamp'] != self._labels_timestamp):
       self._SetLabelData(changed_data)
     # delete missing projects
     if 'ActiveProjectIds' in changed_data:
@@ -321,9 +328,17 @@ class TodoistData(object):
 
 
 def GetResponse():
-  values = {'api_token': API_TOKEN}
+  values = {'api_token': API_TOKEN, 'resource_types': ['labels']}
   data = urllib.urlencode(values)
-  req = urllib2.Request('https://api.todoist.com/TodoistSync/v2/get', data)
+  req = urllib2.Request('https://api.todoist.com/TodoistSync/v' + TODOIST_VERSION + '/get', data)
+  return urllib2.urlopen(req)
+
+def GetLabels():
+  req = urllib2.Request('https://todoist.com/API/getLabels?token=' + API_TOKEN)
+  return urllib2.urlopen(req)
+
+def GetProjects():
+  req = urllib2.Request('https://todoist.com/API/getProjects?token=' + API_TOKEN)
   return urllib2.urlopen(req)
 
 def DoSync(items_to_sync):
@@ -331,7 +346,7 @@ def DoSync(items_to_sync):
             'items_to_sync': json.dumps(items_to_sync)}
   logging.info("posting %s", values)
   data = urllib.urlencode(values)
-  req = urllib2.Request('https://api.todoist.com/TodoistSync/v2/sync', data)
+  req = urllib2.Request('https://api.todoist.com/TodoistSync/v' + TODOIST_VERSION + '/sync', data)
   return urllib2.urlopen(req)
 
 def DoSyncAndGetUpdated(items_to_sync, sync_state):
@@ -341,13 +356,17 @@ def DoSyncAndGetUpdated(items_to_sync, sync_state):
     values[key] = json.dumps(value)
   logging.debug("posting %s", values)
   data = urllib.urlencode(values)
-  req = urllib2.Request('https://api.todoist.com/TodoistSync/v2/syncAndGetUpdated', data)
+  req = urllib2.Request('https://api.todoist.com/TodoistSync/v' + TODOIST_VERSION + '/syncAndGetUpdated', data)
   return urllib2.urlopen(req)
 
 def main():
   logging.basicConfig(level=logging.INFO)
   response = GetResponse()
   json_data = json.loads(response.read())
+  response = GetLabels()
+  json_data['Labels'] = json.loads(response.read())
+  response = GetProjects()
+  json_data['Projects'] = json.loads(response.read())  
   logging.debug("Got initial data: %s", json_data)
   while True:
     logging.info("*** Retrieving Data")
