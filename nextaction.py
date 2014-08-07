@@ -164,10 +164,10 @@ class Project(object):
     return self._subProjects
 
   def IsSequential(self):
-    startWithSomeday = self.name.startswith('Someday')
+    startsWithKeyword = self.name.startswith('Someday') or self.name.startswith('List - ')
     endsWithEqual = self.name.endswith('=')
     parentSequential = self.parent == None or self.parent.IsSequential()
-    seq = ((not startWithSomeday) and (not endsWithEqual)) and parentSequential
+    seq = ((not startsWithKeyword) and (not endsWithEqual)) and parentSequential
     return seq
 
   def IsParallel(self):
