@@ -162,12 +162,20 @@ class Project(object):
             order = order + 1
       
     return self._subProjects
+    
+  def IsIgnored(self):
+    return self.name.startswith('Someday') or self.name.startswith('List - ')
 
   def IsSequential(self):
-    startsWithKeyword = self.name.startswith('Someday') or self.name.startswith('List - ')
+    ignored = self.IsIgnored()
     endsWithEqual = self.name.endswith('=')
-    parentSequential = self.parent == None or self.parent.IsSequential()
-    seq = ((not startsWithKeyword) and (not endsWithEqual)) and parentSequential
+    validParent = self.parent == None or not self.parent.IsIgnored()
+    seq = ((not ignored) and (not endsWithEqual)) and validParent
+    # if self.name .startsWith('Payer Camille'):
+#       print startsWithKeyword
+#       print endsWithEqual
+#       print parentSequential
+#       print seq
     return seq
 
   def IsParallel(self):
