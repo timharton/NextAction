@@ -14,6 +14,7 @@ import sys
 API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
 NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
 SYNC_DELAY = int(os.environ.get('TODOIST_SYNC_DELAY', '5'))
+INBOX_HANDLING = os.environ.get('TODOIST_INBOX_HANDLING', 'parallel')
 TODOIST_VERSION = '5.3'
 
 
@@ -172,19 +173,12 @@ class Project(object):
         return self.name.startswith('Someday') or self.name.startswith('List - ')
 
     def IsSequential(self):
-        ignored = self.IsIgnored()
-        endsWithEqual = self.name.endswith('=')
-        validParent = self.parent is None or not self.parent.IsIgnored()
-        seq = (not ignored) and (not endsWithEqual) and validParent
-        # if self.name .startsWith('Payer Camille'):
-        # print startsWithKeyword
-        #       print endsWithEqual
-        #       print parentSequential
-        #       print seq
-        return seq
+        return not self.IsIgnored() and \
+            not self.IsParallel() and \
+            (self.parent is None or not self.parent.IsIgnored())
 
     def IsParallel(self):
-        return self.name.endswith('=')
+        return self.name.endswith('=') or (self.name == 'Inbox' and INBOX_HANDLING == 'parallel')
 
     SortChildren = Item.__dict__['SortChildren']
 

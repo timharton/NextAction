@@ -17,6 +17,11 @@
             "description": "The number of seconds to wait between syncs.",
             "value": "5",
             "required": false
+        },
+        "TODOIST_INBOX_HANDLING": {
+            "description": "What method to use for the Inbox, sequence or parallel",
+            "value": "parallel",
+            "required": false
         }
     }
 }
