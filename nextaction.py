@@ -9,6 +9,7 @@ import time
 import urllib
 import urllib2
 import os
+import sys
 
 API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
 NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
@@ -376,6 +377,9 @@ def DoSyncAndGetUpdated(items_to_sync, sync_state):
 
 def main():
     logging.basicConfig(level=logging.INFO)
+    if not API_TOKEN:
+        logging.error('No API key set, exiting...')
+        sys.exit(1)
     response = GetResponse()
     json_data = json.loads(response.read())
     while True:
