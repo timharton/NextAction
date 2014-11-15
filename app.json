@@ -1,21 +1,22 @@
 {
-  "name": "NextAction",
-  "description": "Todoist API application to provide a auto-populated next action label",
-  "repository": "https://github.com/nikdoof/NextAction",
-  "keywords": ["python"],
-  "env": {
-    "TODOIST_API_KEY": {
-      "description": "Your Todoist API Key",
-      "required": true
-    },
-    "TODOIST_NEXT_ACTION_LABEL": {
-      "description": "The Todoist label to use for next actions.",
-      "value": "next_action",
-      "required": false
-    },
-    "TODOIST_SYNC_DELAY": {
-      "description": "The number of seconds to wait between syncs.",
-      "value": "5",
-      "required": false
+    "name": "NextAction",
+    "description": "Todoist API application to provide a auto-populated next action label",
+    "repository": "https://github.com/nikdoof/NextAction",
+    "keywords": ["python"],
+    "env": {
+        "TODOIST_API_KEY": {
+            "description": "Your Todoist API Key",
+            "required": true
+        },
+        "TODOIST_NEXT_ACTION_LABEL": {
+            "description": "The Todoist label to use for next actions.",
+            "value": "next_action",
+            "required": false
+        },
+        "TODOIST_SYNC_DELAY": {
+            "description": "The number of seconds to wait between syncs.",
+            "value": "5",
+            "required": false
+        }
     }
 }
