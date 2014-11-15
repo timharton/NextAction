@@ -9,9 +9,10 @@ import logging
 import time
 import urllib
 import urllib2
+import os
 
-API_TOKEN = 'API TOKEN HERE'
-NEXT_ACTION_LABEL = u'next_action'
+API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
+NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
 TODOIST_VERSION = '5.3'
 
 class TraversalState(object):
