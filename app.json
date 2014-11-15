@@ -12,5 +12,10 @@
       "description": "The Todoist label to use for next actions.",
       "value": "next_action",
       "required": false
+    },
+    "TODOIST_SYNC_DELAY": {
+      "description": "The number of seconds to wait between syncs.",
+      "value": "5",
+      "required": false
     }
 }

@@ -13,6 +13,7 @@ import sys
 
 API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
 NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
+SYNC_DELAY = int(os.environ.get('TODOIST_SYNC_DELAY', '5'))
 TODOIST_VERSION = '5.3'
 
 
@@ -393,7 +394,7 @@ def main():
         logging.info("*** Data built")
         mods = singleton.GetProjectMods()
         if len(mods) == 0:
-            time.sleep(5)
+            time.sleep(SYNC_DELAY)
         else:
             logging.info("* Modifications necessary - skipping sleep cycle.")
         logging.info("** Beginning sync")
