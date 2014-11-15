@@ -377,7 +377,11 @@ def DoSyncAndGetUpdated(items_to_sync, sync_state):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    if os.environ.get('TODOIST_DEBUG', None):
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    logging.basicConfig(level=log_level)
     if not API_TOKEN:
         logging.error('No API key set, exiting...')
         sys.exit(1)
