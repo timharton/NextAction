@@ -134,7 +134,6 @@ class Project(object):
         self.indent = initial_data['indent'] - 1
         self.is_archived = initial_data['is_archived'] == 1
         self.is_deleted = initial_data['is_deleted'] == 1
-        self.last_updated = initial_data['last_updated']
         self.name = initial_data['name']
         # Project should act like an item, so it should have content.
         self.content = initial_data['name']
@@ -249,8 +248,6 @@ class TodoistData(object):
 
     def GetSyncState(self):
         project_timestamps = dict()
-        for project_id, project in self._projects.iteritems():
-            project_timestamps[project_id] = project.last_updated
         return {'labels_timestamp': self._labels_timestamp,
                 'project_timestamps': project_timestamps}
 
@@ -267,9 +264,6 @@ class TodoistData(object):
         if 'Projects' in changed_data:
             for project in changed_data['Projects']:
                 logging.info("Refreshing data for project %s", project['name'])
-                if project['id'] in self._projects:
-                    logging.info("replacing project data, old timestamp: %s new timestamp: %s",
-                                 self._projects[project['id']].last_updated, project['last_updated'])
                 self._projects[project['id']] = Project(project)
         # We have already reloaded project data sent to us.
         # Now any project timestamps that have changed are due to the changes we
