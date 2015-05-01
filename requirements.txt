@@ -1,1 +1,1 @@
-python-dateutil
+todoist-python>=0.2.9

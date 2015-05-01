@@ -11,8 +11,8 @@ Note that NextAction requires Todoist Premium to function properly, as labels ar
 Requirements
 ============
 
-* Python 2.6, Python 3.0+ is unsupported at the moment
-* ```python-dateutil``` package.
+* Python 2.7, Python 3.0+ is unsupported at the moment
+* ```todoist-python``` package.
 
 Activating NextAction
 =====================
@@ -20,12 +20,7 @@ Activating NextAction
 Sequential list processing
 --------------------------
 If a list ends with `--`, the top level of tasks will be treated as a priority queue and the most important will be labeled `@next_action`.
-Importance is determined by:
- 1. Priority
- 2. Due date
- 3. Order in the list
-
-`@next_action` waterfalls into indented regions. If the top level task that is selected to receive the `@next_action` label has subtasks, the same algorithm is used. The `@next_action` label is only applied to one task.
+Importance is determined by order in the list
 
 Parallel list processing
 ------------------------
