@@ -4,27 +4,9 @@ import time
 import logging
 import os
 import sys
+import argparse
 
 from todoist.api import TodoistAPI
-
-
-API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
-NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
-SYNC_DELAY = int(os.environ.get('TODOIST_SYNC_DELAY', '5'))
-INBOX_HANDLING = os.environ.get('TODOIST_INBOX_HANDLING', 'parallel')
-PARALLEL_SUFFIX = os.environ.get('TODOIST_PARALLEL_SUFFIX', '=')
-SERIAL_SUFFIX = os.environ.get('TODOIST_SERIAL_SUFFIX', '-')
-
-
-def get_project_type(project):
-    """Identifies how a project should be handled"""
-    name = project['name'].strip()
-    if project['name'] == 'Inbox':
-        return INBOX_HANDLING
-    elif name[-1] == PARALLEL_SUFFIX:
-        return 'parallel'
-    elif name[-1] == SERIAL_SUFFIX:
-        return 'serial'
 
 
 def get_subitems(items, parent_item=None):
@@ -49,28 +31,60 @@ def get_subitems(items, parent_item=None):
 
 
 def main():
-    if os.environ.get('TODOIST_DEBUG', None):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--api_key', help='Todoist API Key',
+                        default=os.environ.get('TODOIST_API_KEY', None))
+    parser.add_argument('-l', '--label', help='The next action label to use',
+                        default=os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action'))
+    parser.add_argument('-d', '--delay', help='Specify the delay in seconds between syncs',
+                        default=int(os.environ.get('TODOIST_SYNC_DELAY', '5')), type=int)
+    parser.add_argument('--debug', help='Enable debugging', action='store_true')
+    parser.add_argument('--inbox', help='The method the Inbox project should be processed',
+                        default=os.environ.get('TODOIST_INBOX_HANDLING', 'parallel'),
+                        choices=['parallel', 'serial'])
+    parser.add_argument('--parallel_suffix', default=os.environ.get('TODOIST_PARALLEL_SUFFIX', '='))
+    parser.add_argument('--serial_suffix', default=os.environ.get('TODOIST_SERIAL_SUFFIX', '-'))
+    args = parser.parse_args()
+
+    # Set debug
+    if args.debug or os.environ.get('TODOIST_DEBUG', None):
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
     logging.basicConfig(level=log_level)
-    if not API_TOKEN:
+
+    # Check we have a API key
+    if not args.api_key:
         logging.error('No API key set, exiting...')
         sys.exit(1)
 
+    # Run the initial sync
     logging.debug('Connecting to the Todoist API')
-    api = TodoistAPI(token=API_TOKEN)
+    api = TodoistAPI(token=args.api_key)
     logging.debug('Syncing the current state from the API')
     api.sync(resource_types=['projects', 'labels', 'items'])
 
-    labels = api.labels.all(lambda x: x['name'] == NEXT_ACTION_LABEL)
+    # Check the next action label exists
+    labels = api.labels.all(lambda x: x['name'] == args.label)
     if len(labels) > 0:
         label_id = labels[0]['id']
-        logging.debug('Label %s found as label id %d', NEXT_ACTION_LABEL, label_id)
+        logging.debug('Label %s found as label id %d', args.label, label_id)
     else:
-        logging.error("Label %s doesn't exist, please create it or change TODOIST_NEXT_ACTION_LABEL.", NEXT_ACTION_LABEL)
+        logging.error("Label %s doesn't exist, please create it or change TODOIST_NEXT_ACTION_LABEL.", args.label)
         sys.exit(1)
 
+    def get_project_type(project_object):
+        """Identifies how a project should be handled"""
+        name = project_object['name'].strip()
+        if project['name'] == 'Inbox':
+            return args.inbox
+        elif name[-1] == args.parallel_suffix:
+            return 'parallel'
+        elif name[-1] == args.serial_suffix:
+            return 'serial'
+
+    # Main loop
     while True:
         api.sync(resource_types=['projects', 'labels', 'items'])
         for project in api.projects.all():
@@ -90,7 +104,8 @@ def main():
 
                 # Serial
                 if project_type == 'serial':
-                    items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
+                    items = sorted(api.items.all(lambda x: x['project_id'] == project['id']),
+                                   key=lambda x: x['item_order'])
                     for item in items:
                         labels = item['labels']
                         if item['item_order'] == 1:
@@ -106,8 +121,8 @@ def main():
                                 item.update(labels=labels)
 
         api.sync(resource_types=['projects', 'labels', 'items'])
-        logging.debug('Sleeping for %d seconds', SYNC_DELAY)
-        time.sleep(SYNC_DELAY)
+        logging.debug('Sleeping for %d seconds', args.delay)
+        time.sleep(args.delay)
 
 
 if __name__ == '__main__':
