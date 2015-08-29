@@ -22,6 +22,16 @@
             "description": "What method to use for the Inbox, sequence or parallel",
             "value": "parallel",
             "required": false
+        },
+        "TODODIST_PARALLEL_SUFFIX": {
+            "description": "What sequence of characters to use to identify parallel processed projects",
+            "value": "=",
+            "required": false
+        },
+        "TODODIST_SERIAL_SUFFIX": {
+            "description": "What sequence of characters to use to identify serial processed projects",
+            "value": "-",
+            "required": false
         }
     }
 }

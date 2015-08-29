@@ -12,15 +12,17 @@ API_TOKEN = os.environ.get('TODOIST_API_KEY', None)
 NEXT_ACTION_LABEL = os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action')
 SYNC_DELAY = int(os.environ.get('TODOIST_SYNC_DELAY', '5'))
 INBOX_HANDLING = os.environ.get('TODOIST_INBOX_HANDLING', 'parallel')
-
+PARALLEL_SUFFIX = os.environ.get('TODOIST_PARALLEL_SUFFIX', '=')
+SERIAL_SUFFIX = os.environ.get('TODOIST_SERIAL_SUFFIX', '-')
 
 def get_project_type(project):
+    """Identifies how a project should be handled"""
     name = project['name'].strip()
     if project['name'] == 'Inbox':
         return INBOX_HANDLING
-    elif name[-1] == '=':
+    elif name[-1] == PARALLEL_SUFFIX:
         return 'parallel'
-    elif name[-1] == '-':
+    elif name[-1] == SERIAL_SUFFIX:
         return 'serial'
 
 
