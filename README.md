@@ -4,7 +4,7 @@ NextAction
 A more GTD-like workflow for Todoist. Uses the REST API to add and remove a `@next_action` label from tasks.
 
 This program looks at every list in your Todoist account.
-Any list that ends with `--` or `=` is treated specially, and processed by NextAction.
+Any list that ends with `-` or `=` is treated specially, and processed by NextAction.
 
 Note that NextAction requires Todoist Premium to function properly, as labels are a premium feature.
 
@@ -19,7 +19,7 @@ Activating NextAction
 
 Sequential list processing
 --------------------------
-If a list ends with `--`, the top level of tasks will be treated as a priority queue and the most important will be labeled `@next_action`.
+If a list ends with `-`, the top level of tasks will be treated as a priority queue and the most important will be labeled `@next_action`.
 Importance is determined by order in the list
 
 Parallel list processing
@@ -48,3 +48,7 @@ This package is ready to be pushed to a Heroku instance with minimal configurati
 
 * ```TODOIST_API_KEY``` - Your Todoist API Key
 * ```TODOIST_NEXT_ACTION_LABEL``` - The label to use in Todoist for next actions (defaults to next_action)
+* ```TODOIST_SYNC_DELAY``` - The number of seconds to wait between syncs. (defaults to 5)
+* ```TODOIST_INBOX_HANDLING``` - What method to use for the Inbox, sequence or parallel (defaults to parallel)
+* ```TODODIST_PARALLEL_SUFFIX``` - What sequence of characters to use to identify parallel processed projects (defaults to =)
+* ```TODODIST_SERIAL_SUFFIX``` - What sequence of characters to use to identify serial processed projects (defaults to -)
