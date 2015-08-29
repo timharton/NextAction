@@ -15,6 +15,7 @@ INBOX_HANDLING = os.environ.get('TODOIST_INBOX_HANDLING', 'parallel')
 PARALLEL_SUFFIX = os.environ.get('TODOIST_PARALLEL_SUFFIX', '=')
 SERIAL_SUFFIX = os.environ.get('TODOIST_SERIAL_SUFFIX', '-')
 
+
 def get_project_type(project):
     """Identifies how a project should be handled"""
     name = project['name'].strip()
@@ -27,6 +28,7 @@ def get_project_type(project):
 
 
 def get_subitems(items, parent_item=None):
+    """Search a flat item list for child items"""
     result_items = []
     found = False
     if parent_item:
@@ -72,12 +74,12 @@ def main():
     while True:
         api.sync(resource_types=['projects', 'labels', 'items'])
         for project in api.projects.all():
-            proj_type = get_project_type(project)
-            if proj_type:
-                logging.debug('Project %s being processed as %s', project['name'], proj_type)
+            project_type = get_project_type(project)
+            if project_type:
+                logging.debug('Project %s being processed as %s', project['name'], project_type)
 
                 # Parallel
-                if proj_type == 'parallel':
+                if project_type == 'parallel':
                     items = api.items.all(lambda x: x['project_id'] == project['id'])
                     for item in items:
                         labels = item['labels']
@@ -87,7 +89,7 @@ def main():
                             item.update(labels=labels)
 
                 # Serial
-                if proj_type == 'serial':
+                if project_type == 'serial':
                     items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
                     for item in items:
                         labels = item['labels']
