@@ -120,7 +120,7 @@ def main():
                                 logging.debug('Updating %s without label', item['content'])
                                 item.update(labels=labels)
 
-        api.sync(resource_types=['projects', 'labels', 'items'])
+        api.commit()
         logging.debug('Sleeping for %d seconds', args.delay)
         time.sleep(args.delay)
 
