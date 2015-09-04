@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import argparse
+from datetime import datetime
 
 from todoist.api import TodoistAPI
 
@@ -45,6 +46,8 @@ def main():
                         choices=['parallel', 'serial'])
     parser.add_argument('--parallel_suffix', default=os.environ.get('TODOIST_PARALLEL_SUFFIX', '='))
     parser.add_argument('--serial_suffix', default=os.environ.get('TODOIST_SERIAL_SUFFIX', '-'))
+    parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
+                        default=int(os.environ.get('TODOIST_HIDE_FUTURE', '7')), type=int)
     args = parser.parse_args()
 
     # Set debug
@@ -92,24 +95,24 @@ def main():
             if project_type:
                 logging.debug('Project %s being processed as %s', project['name'], project_type)
 
-                # Parallel
-                if project_type == 'parallel':
-                    items = api.items.all(lambda x: x['project_id'] == project['id'])
-                    for item in items:
-                        labels = item['labels']
-                        if label_id not in labels:
-                            logging.debug('Updating %s with label', item['content'])
-                            labels.append(label_id)
+                items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
+
+                for item in items:
+                    labels = item['labels']
+
+                    # If its too far in the future, remove the next_action tag and skip
+                    if args.hide_future > 0 and 'due_date_utc' in item.data and item['due_date_utc'] is not None:
+                        due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
+                        future_diff = (due_date - datetime.utcnow()).total_seconds()
+                        if future_diff >= (args.hide_future * 86400) and label_id in labels:
+                            labels.remove(label_id)
+                            logging.debug('Updating %s without label as its too far in the future', item['content'])
                             item.update(labels=labels)
+                            continue
 
-                # Serial
-                if project_type == 'serial':
-                    items = sorted(api.items.all(lambda x: x['project_id'] == project['id']),
-                                   key=lambda x: x['item_order'])
-                    for item in items:
-                        labels = item['labels']
+                    # Process item
+                    if project_type == 'serial':
                         if item['item_order'] == 1:
-
                             if label_id not in labels:
                                 labels.append(label_id)
                                 logging.debug('Updating %s with label', item['content'])
@@ -119,6 +122,11 @@ def main():
                                 labels.remove(label_id)
                                 logging.debug('Updating %s without label', item['content'])
                                 item.update(labels=labels)
+                    elif project_type == 'parallel':
+                        if label_id not in labels:
+                            logging.debug('Updating %s with label', item['content'])
+                            labels.append(label_id)
+                            item.update(labels=labels)
 
         api.commit()
         logging.debug('Sleeping for %d seconds', args.delay)
