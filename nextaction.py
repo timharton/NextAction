@@ -104,10 +104,11 @@ def main():
                     if args.hide_future > 0 and 'due_date_utc' in item.data and item['due_date_utc'] is not None:
                         due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
                         future_diff = (due_date - datetime.utcnow()).total_seconds()
-                        if future_diff >= (args.hide_future * 86400) and label_id in labels:
-                            labels.remove(label_id)
-                            logging.debug('Updating %s without label as its too far in the future', item['content'])
-                            item.update(labels=labels)
+                        if future_diff >= (args.hide_future * 86400):
+                            if label_id in labels:
+                                labels.remove(label_id)
+                                logging.debug('Updating %s without label as its too far in the future', item['content'])
+                                item.update(labels=labels)
                             continue
 
                     # Process item
