@@ -37,18 +37,4 @@ Running NextAction
 
 NextAction will read your environment to retrieve your Todoist API key, so to run on a Linux/Mac OSX you can use the following commandline
 
-    TODOIST_API_KEY="XYZ" python nextaction.py
-
-Heroku Support
---------------
-
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-This package is ready to be pushed to a Heroku instance with minimal configuration values:
-
-* ```TODOIST_API_KEY``` - Your Todoist API Key
-* ```TODOIST_NEXT_ACTION_LABEL``` - The label to use in Todoist for next actions (defaults to next_action)
-* ```TODOIST_SYNC_DELAY``` - The number of seconds to wait between syncs. (defaults to 5)
-* ```TODOIST_INBOX_HANDLING``` - What method to use for the Inbox, sequence or parallel (defaults to parallel)
-* ```TODODIST_PARALLEL_SUFFIX``` - What sequence of characters to use to identify parallel processed projects (defaults to =)
-* ```TODODIST_SERIAL_SUFFIX``` - What sequence of characters to use to identify serial processed projects (defaults to -)
+    python nextaction.py -a <API Key>

@@ -2,7 +2,6 @@
 
 import time
 import logging
-import os
 import sys
 import argparse
 from datetime import datetime
@@ -34,24 +33,20 @@ def get_subitems(items, parent_item=None):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--api_key', help='Todoist API Key',
-                        default=os.environ.get('TODOIST_API_KEY', None))
-    parser.add_argument('-l', '--label', help='The next action label to use',
-                        default=os.environ.get('TODOIST_NEXT_ACTION_LABEL', 'next_action'))
-    parser.add_argument('-d', '--delay', help='Specify the delay in seconds between syncs',
-                        default=int(os.environ.get('TODOIST_SYNC_DELAY', '5')), type=int)
+    parser.add_argument('-a', '--api_key', help='Todoist API Key')
+    parser.add_argument('-l', '--label', help='The next action label to use', default='next_action')
+    parser.add_argument('-d', '--delay', help='Specify the delay in seconds between syncs', default=5, type=int)
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     parser.add_argument('--inbox', help='The method the Inbox project should be processed',
-                        default=os.environ.get('TODOIST_INBOX_HANDLING', 'parallel'),
-                        choices=['parallel', 'serial'])
-    parser.add_argument('--parallel_suffix', default=os.environ.get('TODOIST_PARALLEL_SUFFIX', '='))
-    parser.add_argument('--serial_suffix', default=os.environ.get('TODOIST_SERIAL_SUFFIX', '-'))
+                        default='parallel', choices=['parallel', 'serial'])
+    parser.add_argument('--parallel_suffix', default='=')
+    parser.add_argument('--serial_suffix', default='-')
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
-                        default=int(os.environ.get('TODOIST_HIDE_FUTURE', '7')), type=int)
+                        default=7, type=int)
     args = parser.parse_args()
 
     # Set debug
-    if args.debug or os.environ.get('TODOIST_DEBUG', None):
+    if args.debug:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
