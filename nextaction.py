@@ -84,47 +84,51 @@ def main():
 
     # Main loop
     while True:
-        api.sync(resource_types=['projects', 'labels', 'items'])
-        for project in api.projects.all():
-            project_type = get_project_type(project)
-            if project_type:
-                logging.debug('Project %s being processed as %s', project['name'], project_type)
+        try:
+            api.sync(resource_types=['projects', 'labels', 'items'])
+        except Exception as e:
+            logging.exception('Error trying to sync with Todoist API: %s' % str(e))
+        else:
+            for project in api.projects.all():
+                project_type = get_project_type(project)
+                if project_type:
+                    logging.debug('Project %s being processed as %s', project['name'], project_type)
 
-                items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
+                    items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
 
-                for item in items:
-                    labels = item['labels']
+                    for item in items:
+                        labels = item['labels']
 
-                    # If its too far in the future, remove the next_action tag and skip
-                    if args.hide_future > 0 and 'due_date_utc' in item.data and item['due_date_utc'] is not None:
-                        due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
-                        future_diff = (due_date - datetime.utcnow()).total_seconds()
-                        if future_diff >= (args.hide_future * 86400):
-                            if label_id in labels:
-                                labels.remove(label_id)
-                                logging.debug('Updating %s without label as its too far in the future', item['content'])
-                                item.update(labels=labels)
-                            continue
+                        # If its too far in the future, remove the next_action tag and skip
+                        if args.hide_future > 0 and 'due_date_utc' in item.data and item['due_date_utc'] is not None:
+                            due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
+                            future_diff = (due_date - datetime.utcnow()).total_seconds()
+                            if future_diff >= (args.hide_future * 86400):
+                                if label_id in labels:
+                                    labels.remove(label_id)
+                                    logging.debug('Updating %s without label as its too far in the future', item['content'])
+                                    item.update(labels=labels)
+                                continue
 
-                    # Process item
-                    if project_type == 'serial':
-                        if item['item_order'] == 1:
+                        # Process item
+                        if project_type == 'serial':
+                            if item['item_order'] == 1:
+                                if label_id not in labels:
+                                    labels.append(label_id)
+                                    logging.debug('Updating %s with label', item['content'])
+                                    item.update(labels=labels)
+                            else:
+                                if label_id in labels:
+                                    labels.remove(label_id)
+                                    logging.debug('Updating %s without label', item['content'])
+                                    item.update(labels=labels)
+                        elif project_type == 'parallel':
                             if label_id not in labels:
-                                labels.append(label_id)
                                 logging.debug('Updating %s with label', item['content'])
+                                labels.append(label_id)
                                 item.update(labels=labels)
-                        else:
-                            if label_id in labels:
-                                labels.remove(label_id)
-                                logging.debug('Updating %s without label', item['content'])
-                                item.update(labels=labels)
-                    elif project_type == 'parallel':
-                        if label_id not in labels:
-                            logging.debug('Updating %s with label', item['content'])
-                            labels.append(label_id)
-                            item.update(labels=labels)
 
-        api.commit()
+            api.commit()
         logging.debug('Sleeping for %d seconds', args.delay)
         time.sleep(args.delay)
 
