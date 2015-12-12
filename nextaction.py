@@ -41,8 +41,8 @@ def main():
     parser.add_argument('--debug', help='Enable debugging', action='store_true')
     parser.add_argument('--inbox', help='The method the Inbox project should be processed',
                         default='parallel', choices=['parallel', 'serial'])
-    parser.add_argument('--parallel_suffix', default='=')
-    parser.add_argument('--serial_suffix', default='-')
+    parser.add_argument('--parallel_suffix', default='.')
+    parser.add_argument('--serial_suffix', default='_')
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
                         default=7, type=int)
     args = parser.parse_args()
