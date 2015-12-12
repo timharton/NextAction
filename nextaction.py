@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-import time
 import logging
-import sys
 import argparse
-from datetime import datetime
 
+# noinspection PyPackageRequirements
 from todoist.api import TodoistAPI
+
+import time
+import sys
+from datetime import datetime
 
 
 def get_subitems(items, parent_item=None):
