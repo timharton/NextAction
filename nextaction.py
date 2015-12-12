@@ -45,6 +45,7 @@ def main():
     parser.add_argument('--serial_suffix', default='_')
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
                         default=7, type=int)
+    parser.add_argument('--onetime', help='Update Todoist once and exit', action='store_true')
     args = parser.parse_args()
 
     # Set debug
@@ -131,6 +132,9 @@ def main():
                                 item.update(labels=labels)
 
             api.commit()
+
+        if args.onetime:
+            break
         logging.debug('Sleeping for %d seconds', args.delay)
         time.sleep(args.delay)
 
