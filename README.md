@@ -19,12 +19,12 @@ Activating NextAction
 
 Sequential list processing
 --------------------------
-If a list ends with `_`, the top level of tasks will be treated as a priority queue and the most important will be labeled `@next_action`.
+If a project or task ends with `_`, the child tasks will be treated as a priority queue and the most important will be labeled `@next_action`.
 Importance is determined by order in the list
 
 Parallel list processing
 ------------------------
-If a list name ends with `.`, the top level of tasks will be treated as parallel `@next_action`s.
+If a project or task name ends with `.`, the child tasks will be treated as parallel `@next_action`s.
 The waterfall processing will be applied the same way as sequential lists - every parent task will be treated as sequential. This can be overridden by appending `_` to the name of the parent task.
 
 Executing NextAction
