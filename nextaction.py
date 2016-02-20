@@ -12,7 +12,7 @@ from datetime import datetime
 
 
 def get_subitems(items, parent_item=None):
-    """Search a flat item list for child items"""
+    """Search a flat item list for child items."""
     result_items = []
     found = False
     if parent_item:
@@ -35,7 +35,7 @@ def get_subitems(items, parent_item=None):
 
 
 def main():
-
+    """Main process function."""
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--api_key', help='Todoist API Key')
     parser.add_argument('-l', '--label', help='The next action label to use', default='next_action')
@@ -78,7 +78,7 @@ def main():
         sys.exit(1)
 
     def get_project_type(project_object):
-        """Identifies how a project should be handled"""
+        """Identifies how a project should be handled."""
         name = project_object['name'].strip()
         if project['name'] == 'Inbox':
             return args.inbox
@@ -88,7 +88,7 @@ def main():
             return 'serial'
 
     def get_item_type(item):
-        """Identifies how a item with sub items should be handled"""
+        """Identifies how a item with sub items should be handled."""
         name = item['content'].strip()
         if name[-1] == args.parallel_suffix:
             return 'parallel'
@@ -121,6 +121,7 @@ def main():
                 if project_type:
                     logging.debug('Project %s being processed as %s', project['name'], project_type)
 
+                    # Get all items for the project, sort by the item_order field.
                     items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
 
                     for item in items:
@@ -165,12 +166,16 @@ def main():
                                 elif project_type == 'parallel':
                                     add_label(item, label_id)
 
-            logging.debug('%d changes queued for sync... commiting if needed', len(api.queue))
             if len(api.queue):
+                logging.debug('%d changes queued for sync... commiting to Todoist.', len(api.queue))
                 api.commit()
+            else:
+                logging.debug('No changes queued, skipping sync.')
 
+        # If onetime is set, exit after first execution.
         if args.onetime:
             break
+
         logging.debug('Sleeping for %d seconds', args.delay)
         time.sleep(args.delay)
 
