@@ -74,6 +74,17 @@ class TodoistConnection(object):
             labels.remove(self.label)
             self.api.items.update(item['id'], labels=labels)
 
+    def insert_serial_item(self, serial_items, item):
+        if len(serial_items):
+            if item['item_order'] < serial_items[-1]['item_order']:
+                serial_items.insert(0, item)
+            else:
+                serial_items.append(item)
+        else:
+            serial_items.append(item)
+
+        return serial_items
+
     # Main loop
 
 def main():
@@ -152,51 +163,50 @@ def main():
 
                         item_type = conn.get_item_type(item)
                         child_items = conn.get_subitems(items, item)
+
                         if item_type:
                             conn.logging.debug('Identified %s as %s type', item['content'], item_type)
 
-                        if item_type or len(child_items) > 0:
-                        # Process parallel tagged items or untagged parents
-                            if item_type == 'parallel':
-                                for child_item in child_items:
-                                    conn.add_label(child_item)
-                                # Remove the label from the parent
-                                conn.remove_label(item)
-                        # Process items as per project type on indent 1 if untagged
-                        else:
-                            if project_type == 'serial':
-                                # Keep a list if postions of serial items
-                                if len(serial_items):
-                                    if item['item_order'] < serial_items[-1]['item_order']:
-                                        serial_items.insert(0, item)
-                                    else:
-                                        serial_items.append(item)
-                                else:
-                                    serial_items.append(item)
-                            elif project_type == 'parallel':
-                                conn.add_label(item)
-                        
-                    if len(serial_items):
-                        # Label to first item may not necessarily be in pos 1 
-                        item = serial_items.pop(0)
-                        item_type = conn.get_item_type(item)
-                        child_items = conn.get_subitems(serial_items, item)
+                        if project_type == 'serial':
+                                serial_items = conn.insert_serial_item(serial_items, item)
 
                         if len(child_items) > 0:
-                            for idx, child_item in enumerate(child_items):
-                                if idx == 0:
-                                    conn.add_label(child_item)
-                                else:
-                                    conn.remove_label(child_item)
+                        # Process parallel tagged items or untagged parents
+                            for child_item in child_items:
+                                conn.add_label(child_item)
+                            # Remove the label from the parent
                             conn.remove_label(item)
+                        # Process items as per project type on indent 1 if untagged
                         else:
-                            conn.add_label(item)
+                            if project_type == 'parallel':
+                                conn.add_label(item)
+
+                    if len(serial_items):
+                        # Label to first item may not necessarily be in pos 1 
+                        s_item = serial_items.pop(0)
+                        item_type = conn.get_item_type(s_item)
+                        child_items = conn.get_subitems(items, s_item)
+
+                        if len(child_items) > 0:
+                            if item_type == 'serial':
+                                for idx, child_item in enumerate(child_items):
+                                    if idx == 0:
+                                        conn.add_label(child_item)
+                                    else:
+                                        conn.remove_label(child_item)
+                            conn.remove_label(s_item)
+
+                            for child_item in child_items:
+                                serial_items.remove(child_item)
+
+                        else:
+                            conn.add_label(s_item)
 
                         # Remove labels for items following
-                        for item in serial_items:
-                            conn.remove_label(item)
-                            child_items = conn.get_subitems(serial_items, item)
-                            for idx, child_item in enumerate(child_items):
+                        for s_item in serial_items:
+                            conn.remove_label(s_item)
+                            child_items = conn.get_subitems(items, s_item)
+                            for child_item in child_items:
                                 conn.remove_label(child_item)
 
 
