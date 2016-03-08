@@ -147,9 +147,7 @@ def main():
                                 continue
 
                         item_type = conn.get_item_type(item)
-                        print 'item_type: ', item_type
                         child_items = conn.get_subitems(items, item)
-                        print 'child items: ',child_items
                         if item_type:
                             conn.logging.debug('Identified %s as %s type', item['content'], item_type)
 
@@ -157,7 +155,6 @@ def main():
                             # Process serial tagged items
                             if item_type == 'serial':
                                 for idx, child_item in enumerate(child_items):
-                                    # print idx, child_item
                                     if idx == 0:
                                         conn.add_label(child_item)
                                     else:
