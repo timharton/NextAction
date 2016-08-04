@@ -142,9 +142,11 @@ def main():
                         if item_type or len(child_items) > 0:
                             # Process serial tagged items
                             if item_type == 'serial':
-                                for idx, child_item in enumerate(child_items):
-                                    if idx == 0:
+                                for child_item in child_items:
+                                    first_found = False
+                                    if child_item['checked'] == 0 and not first_found:
                                         add_label(child_item, label_id)
+                                        first_found = True
                                     else:
                                         remove_label(child_item, label_id)
                             # Process parallel tagged items or untagged parents
