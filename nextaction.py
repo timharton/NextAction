@@ -48,6 +48,7 @@ def main():
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
                         default=7, type=int)
     parser.add_argument('--onetime', help='Update Todoist once and exit', action='store_true')
+    parser.add_argument('--nocache', help='Disables caching data to disk for quicker syncing', action='store_true')
     args = parser.parse_args()
 
     # Set debug
@@ -64,7 +65,13 @@ def main():
 
     # Run the initial sync
     logging.debug('Connecting to the Todoist API')
-    api = TodoistAPI(token=args.api_key)
+
+    api_arguments = {'token': args.api_key}
+    if args.nocache:
+        logging.debug('Disabling local caching')
+        api_arguments['cache'] = None
+
+    api = TodoistAPI(**api_arguments)
     logging.debug('Syncing the current state from the API')
     api.sync()
 
