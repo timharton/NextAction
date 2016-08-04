@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='NextAction',
-    version='0.4',
+    version='0.5-dev',
     py_modules=['nextaction'],
     url='https://github.com/nikdoof/NextAction',
     license='MIT',
