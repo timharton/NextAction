@@ -140,21 +140,14 @@ def main():
         set_priority(item, 1)
 
     def set_location_labels(item):
-        if everywhere_label_id >= 0:
-            labels_ids = set(item['labels'])
-            if labels_ids & location_labels_ids:
-                remove_label(item, everywhere_label_id)
-            else:
-                add_label(item, everywhere_label_id)
-            # try:
-            #     for label_id in labels_ids:
-            #         if label_id in location_labels_ids:
-            #             logging.debug("FOUND!!!")
-            #             raise Found
-            #     logging.debug("NOT FOUND!!!")
-            #     add_label(item, everywhere_label_id)
-            # except Found:
-            #     remove_label(item, everywhere_label_id)
+        pass
+        # if everywhere_label_id >= 0:
+        #     labels_ids = set(item['labels'])
+        #     if labels_ids & location_labels_ids:
+        #         remove_label(item, everywhere_label_id)
+        #     else:
+        #         add_label(item, everywhere_label_id)
+
 
     # Main loop
     while True:
