@@ -47,6 +47,7 @@ def main():
     parser.add_argument('--serial_suffix', default='_')
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
                         default=7, type=int)
+    parser.add_argument('--hide_scheduled', help='', action='store_true')  # TODO: help
     parser.add_argument('--remove_label', help='Remove next action label from unmarked projects', action='store_true')
     parser.add_argument('--onetime', help='Update Todoist once and exit', action='store_true')
     parser.add_argument('--nocache', help='Disables caching data to disk for quicker syncing', action='store_true')
@@ -136,16 +137,20 @@ def main():
                     )
 
                     for item in items:
+                        item_type = get_item_type(item)
 
-                        # If its too far in the future, remove the next_action tag and skip
-                        if args.hide_future > 0 and 'due_date_utc' in item.data and item['due_date_utc'] is not None:
-                            due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
-                            future_diff = (due_date - datetime.utcnow()).total_seconds()
-                            if future_diff >= (args.hide_future * 86400):
-                                remove_label(item, label_id)
+                        if item.data.get('due_date_utc'):
+                            if args.hide_scheduled and not item_type:
                                 continue
 
-                        item_type = get_item_type(item)
+                            # If its too far in the future, remove the next_action tag and skip
+                            if args.hide_future > 0:
+                                due_date = datetime.strptime(item['due_date_utc'], '%a %d %b %Y %H:%M:%S +0000')
+                                future_diff = (due_date - datetime.utcnow()).total_seconds()
+                                if future_diff >= (args.hide_future * 86400):
+                                    remove_label(item, label_id)
+                                    continue
+
                         child_items = get_subitems(items, item)
                         if item_type:
                             logging.debug('Identified %s as %s type', item['content'], item_type)
