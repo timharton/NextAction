@@ -47,6 +47,7 @@ def main():
     parser.add_argument('--serial_suffix', default='_')
     parser.add_argument('--hide_future', help='Hide future dated next actions until the specified number of days',
                         default=7, type=int)
+    parser.add_argument('--remove_label', help='Remove next action label from unmarked projects', action='store_true')
     parser.add_argument('--onetime', help='Update Todoist once and exit', action='store_true')
     parser.add_argument('--nocache', help='Disables caching data to disk for quicker syncing', action='store_true')
     args = parser.parse_args()
@@ -125,11 +126,12 @@ def main():
         else:
             for project in api.projects.all():
                 project_type = get_project_type(project)
+                items = api.items.all(lambda x: x['project_id'] == project['id'])
                 if project_type:
                     logging.debug('Project %s being processed as %s', project['name'], project_type)
 
                     # Get all items for the project, sort by the item_order field.
-                    items = sorted(api.items.all(lambda x: x['project_id'] == project['id']), key=lambda x: x['item_order'])
+                    items = sorted(items, key=lambda x: x['item_order'])
 
                     for item in items:
 
@@ -174,7 +176,10 @@ def main():
                                         remove_label(item, label_id)
                                 elif project_type == 'parallel':
                                     add_label(item, label_id)
-
+                elif args.remove_label:
+                    for item in items:
+                        remove_label(item, label_id)
+                
             if len(api.queue):
                 logging.debug('%d changes queued for sync... commiting to Todoist.', len(api.queue))
                 api.commit()
