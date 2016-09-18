@@ -106,15 +106,15 @@ def main():
 
     def add_label(item, label):
         if label not in item['labels']:
+            logging.debug('Updating %s (%d) with label', item['content'], item['id'])
             labels = item['labels']
-            logging.debug('Updating %s with label', item['content'])
             labels.append(label)
             api.items.update(item['id'], labels=labels)
 
     def remove_label(item, label):
         if label in item['labels']:
+            logging.debug('Updating %s (%d) with label', item['content'], item['id'])
             labels = item['labels']
-            logging.debug('Updating %s without label', item['content'])
             labels.remove(label)
             api.items.update(item['id'], labels=labels)
 
@@ -125,14 +125,18 @@ def main():
         except Exception as e:
             logging.exception('Error trying to sync with Todoist API: %s' % str(e))
         else:
-            for project in api.projects.all():
+            for project in api.projects.all(lambda x: not x['is_deleted'] and not x['is_archived']):
                 project_type = get_project_type(project)
+                items = api.items.all(
+                            lambda x: x['project_id'] == project['id']
+                                      and not (x['checked'] or x['is_deleted'] or x['is_archived'])
+                )
                 if project_type:
                     logging.debug('Project %s being processed as %s', project['name'], project_type)
 
                     # Get all items for the project, sort by the item_order field.
                     items = sorted(
-                        api.items.all(lambda x: x['project_id'] == project['id'] and not x['checked']),
+                        items,
                         key=lambda x: x['item_order']
                     )
 
@@ -156,16 +160,12 @@ def main():
                         if item_type:
                             logging.debug('Identified %s as %s type', item['content'], item_type)
 
-                        if item_type or len(child_items) > 0:
+                        if item_type or child_items:
                             # Process serial tagged items
                             if item_type == 'serial':
-                                for child_item in child_items:
-                                    first_found = False
-                                    if child_item['checked'] == 0 and not first_found:
-                                        add_label(child_item, label_id)
-                                        first_found = True
-                                    else:
-                                        remove_label(child_item, label_id)
+                                add_label(child_items[0], label_id)
+                                for child_item in child_items[1:]:
+                                    remove_label(child_item, label_id)
                             # Process parallel tagged items or untagged parents
                             else:
                                 for child_item in child_items:
@@ -186,7 +186,7 @@ def main():
                                 elif project_type == 'parallel':
                                     add_label(item, label_id)
                 elif args.remove_label:
-                    for item in api.items.all(lambda x: x['project_id'] == project['id'] and not x['checked']):
+                    for item in items:
                         remove_label(item, label_id)
 
             if len(api.queue):
