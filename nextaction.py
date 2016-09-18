@@ -141,6 +141,7 @@ def main():
 
                         if item.data.get('due_date_utc'):
                             if args.hide_scheduled and not item_type:
+                                remove_label(item, label_id)
                                 continue
 
                             # If its too far in the future, remove the next_action tag and skip
