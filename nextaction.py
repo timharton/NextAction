@@ -172,7 +172,8 @@ def main():
                                     add_label(child_item, label_id)
 
                             # Remove the label from the parent
-                            remove_label(item, label_id)
+                            if child_items:
+                                remove_label(item, label_id)
 
                         # Process items as per project type on indent 1 if untagged
                         else:
