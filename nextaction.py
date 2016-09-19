@@ -171,9 +171,11 @@ def main():
                                 for child_item in child_items:
                                     add_label(child_item, label_id)
 
-                            # Remove the label from the parent
                             if child_items:
                                 remove_label(item, label_id)
+                            else:
+                                add_label(item, label_id)
+
 
                         # Process items as per project type on indent 1 if untagged
                         else:
