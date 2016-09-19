@@ -113,7 +113,7 @@ def main():
 
     def remove_label(item, label):
         if label in item['labels']:
-            logging.debug('Updating %s (%d) with label', item['content'], item['id'])
+            logging.debug('Updating %s (%d) without label', item['content'], item['id'])
             labels = item['labels']
             labels.remove(label)
             api.items.update(item['id'], labels=labels)
