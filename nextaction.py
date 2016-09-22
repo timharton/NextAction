@@ -163,7 +163,8 @@ def main():
                         if item_type or child_items:
                             # Process serial tagged items
                             if item_type == 'serial':
-                                add_label(child_items[0], label_id)
+                                if child_items:
+                                    add_label(child_items[0], label_id)
                                 for child_item in child_items[1:]:
                                     remove_label(child_item, label_id)
                             # Process parallel tagged items or untagged parents
