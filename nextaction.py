@@ -140,7 +140,7 @@ def main():
                         key=lambda x: x['item_order']
                     )
 
-                    for item in items:
+                    for item in filter(lambda x: x['indent'] == 1, items):
                         item_type = get_item_type(item)
 
                         if item.data.get('due_date_utc'):
@@ -157,37 +157,30 @@ def main():
                                     continue
 
                         child_items = get_subitems(items, item)
-                        if item_type:
-                            logging.debug('Identified %s as %s type', item['content'], item_type)
 
-                        if item_type or child_items:
-                            # Process serial tagged items
-                            if item_type == 'serial':
-                                if child_items:
-                                    add_label(child_items[0], label_id)
-                                for child_item in child_items[1:]:
-                                    remove_label(child_item, label_id)
-                            # Process parallel tagged items or untagged parents
-                            else:
-                                for child_item in child_items:
-                                    add_label(child_item, label_id)
-
+                        def add_indent1_label():
                             if child_items:
                                 remove_label(item, label_id)
+                                add_label(child_items[0], label_id)
+                                func = remove_label if item_type == 'serial' else add_label
+                                for child_item in child_items[1:]:
+                                    func(child_item, label_id)
                             else:
                                 add_label(item, label_id)
 
+                        def remove_indent1_label():
+                            remove_label(item, label_id)
+                            for child_item in child_items:
+                                remove_label(child_item, label_id)
 
-                        # Process items as per project type on indent 1 if untagged
-                        else:
-                            if item['indent'] == 1:
-                                if project_type == 'serial':
-                                    if item['item_order'] == 1:
-                                        add_label(item, label_id)
-                                    else:
-                                        remove_label(item, label_id)
-                                elif project_type == 'parallel':
-                                    add_label(item, label_id)
+                        if project_type == 'serial':
+                            if item['item_order'] == 1:
+                                add_indent1_label()
+                            else:
+                                remove_indent1_label()
+                        elif project_type == 'parallel':
+                            add_indent1_label()
+
                 elif args.remove_label:
                     for item in items:
                         remove_label(item, label_id)
