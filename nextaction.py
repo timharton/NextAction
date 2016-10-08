@@ -140,7 +140,7 @@ def main():
                         key=lambda x: x['item_order']
                     )
 
-                    for item in filter(lambda x: x['indent'] == 1, items):
+                    for real_order, item in enumerate(filter(lambda x: x['indent'] == 1, items)):
                         item_type = get_item_type(item)
 
                         if item.data.get('due_date_utc'):
@@ -174,7 +174,7 @@ def main():
                                 remove_label(child_item, label_id)
 
                         if project_type == 'serial':
-                            if item['item_order'] == 1:
+                            if real_order == 0:
                                 add_indent1_label()
                             else:
                                 remove_indent1_label()
