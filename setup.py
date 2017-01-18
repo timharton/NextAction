@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='NextAction',
-    version='0.3',
+    version='0.5-dev',
     py_modules=['nextaction'],
     url='https://github.com/nikdoof/NextAction',
     license='MIT',
@@ -12,8 +12,8 @@ setup(
     entry_points={
         "console_scripts": [
             "nextaction=nextaction:main",
-            ],
-        },
+        ],
+    },
     install_requires=[
         'todoist-python',
     ]
